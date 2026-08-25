@@ -1,13 +1,81 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
+import TextValidators from "../../Validators/TextValidators"
 export default function SignupPage() {
+    let [showPassword, setShowPassword] = useState(false)
+    let [data, setData] = useState({
+        name: '',
+        username: '',
+        phone: '',
+        email: '',
+        password: '',
+        cpassword: '',
+    })
+    let [errorMessage, setErrorMessage] = useState({
+        name: "Full Name Field is Mendatory",
+        username: "User Name Field is Mendatory",
+        email: "Email Address Field is Mendatory",
+        phone: "Phone Number Field is Mendatory",
+        password: "Password Field is Mendatory",
+    })
+    let [show, setShow] = useState(false)
+
+    let navigate = useNavigate()
+
+    function getInputData(e) {
+        let { name, value } = e.target
+        setData({ ...data, [name]: value })
+        setErrorMessage({ ...errorMessage, [name]: TextValidators(e) })
+    }
+    async function postData(e) {
+        e.preventDefault()
+
+        let item = Object.values(errorMessage).find(x => x !== "")
+        if (item) {
+            setShow(true)
+            return
+        }
+
+        if (data.password !== data.cpassword) {
+            setShow(true)
+            setErrorMessage({
+                ...errorMessage,
+                password: "Password and Confirm Password Doesn't Matched"
+            })
+            return
+        }
+        console.log(data)
+        let response = await fetch(`${import.meta.env.VITE_APP_BACKEND_SERVER}/auth/signup`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify({
+                name: data.name,
+                username: data.username,
+                email: data.email,
+                phone: data.phone,
+                password: data.password,
+                confirmPassword: data.cpassword,
+                role: "customer"
+            })
+        })
+        response = await response.json()
+        console.log(response)
+        if (response.status === 201)
+            navigate("/login")
+        else {
+            setErrorMessage({ ...errorMessage, ...response.message })
+            setShow(true)
+        }
+    }
     return (
         <>
             <div className="authentication-wrapper authentication-cover authentication-bg">
                 <div className="authentication-inner row">
                     {/*  Left Text  */}
-                    <div className="d-none d-lg-flex col-lg-7 p-0">
+                    <div className="d-none d-lg-flex col-lg-6 p-0">
                         <div className="auth-cover-bg auth-cover-bg-color d-flex justify-content-center align-items-center">
                             <img
                                 src="/assets/img/illustrations/auth-register-illustration-light.png"
@@ -29,66 +97,129 @@ export default function SignupPage() {
                     {/*  Left Text  */}
 
                     {/*  Register  */}
-                    <div className="d-flex col-12 col-lg-5 align-items-center p-sm-5 p-4">
+                    <div className="d-flex col-12 col-lg-6 align-items-center p-sm-5 p-4">
                         <div className="w-px-400 mx-auto">
                             {/*  Logo  */}
                             <div className="app-brand mb-4">
-                                <Link to="/" className="app-brand-link gap-2 text-white fs-1">
+                                <Link to="/" className="app-brand-link gap-2 text-dark fs-1">
                                     Venuefy
                                 </Link>
                             </div>
                             {/*  /Logo  */}
-                            <h3 className="mb-1 fw-bold">Adventure starts here 🚀</h3>
-                            <p className="mb-4">Make your app management easy and fun!</p>
+                            <h3 className="mb-1 fw-bold">Create Your Account and Adventure starts here 🚀</h3>
+                            <p className="mb-4">Join us today and take the first step toward a better experience.</p>
 
-                            <form id="formAuthentication" className="mb-3" action="index.html" method="POST">
-                                <div className="mb-3">
-                                    <label htmlFor="username" className="form-label">Username</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        id="username"
-                                        name="username"
-                                        placeholder="Enter your username"
-                                        autoFocus
-                                    />
-                                </div>
-                                <div className="mb-3">
-                                    <label htmlFor="email" className="form-label">Email</label>
-                                    <input type="text" className="form-control" id="email" name="email" placeholder="Enter your email" />
-                                </div>
-                                <div className="mb-3 form-password-toggle">
-                                    <label className="form-label" htmlFor="password">Password</label>
-                                    <div className="input-group input-group-merge">
+                            <form id="formAuthentication" className="mb-3" onSubmit={postData}>
+                                <div className="row">
+                                    <div className="col-md-6 mb-3">
+                                        <label htmlFor="name" className="form-label">Full Name*</label>
                                         <input
-                                            type="password"
-                                            id="password"
-                                            className="form-control"
-                                            name="password"
-                                            placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
-                                            aria-describedby="password"
+                                            type="text"
+                                            className={`form-control ${show && errorMessage.name ? 'border-danger' : ''}`}
+                                            id="name"
+                                            name="name"
+                                            onChange={getInputData}
+                                            placeholder="Enter your Full Name"
+                                            autoFocus
                                         />
-                                        <span className="input-group-text cursor-pointer"><i className="ti ti-eye-off"></i></span>
+                                        {show && errorMessage.name ? <p className='text-danger'>{errorMessage.name}</p> : null}
                                     </div>
-                                </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label htmlFor="phone" className="form-label">Phone Number*</label>
+                                        <input
+                                            type="text"
+                                            className={`form-control ${show && errorMessage.phone ? 'border-danger' : ''}`}
+                                            id="phone"
+                                            name="phone"
+                                            onChange={getInputData}
+                                            placeholder="Enter your Phone Number"
+                                            autoFocus
+                                        />
+                                        {show && errorMessage.phone ? <p className='text-danger'>{errorMessage.phone}</p> : null}
+                                    </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label htmlFor="username" className="form-label">Username*</label>
+                                        <input
+                                            type="text"
+                                            className={`form-control ${show && errorMessage.username ? 'border-danger' : ''}`}
+                                            id="username"
+                                            name="username"
+                                            onChange={getInputData}
+                                            placeholder="Enter your Username"
+                                            autoFocus
+                                        />
+                                        {show && errorMessage.username ? <p className='text-danger'>{errorMessage.username}</p> : null}
+                                    </div>
 
-                                <div className="mb-3">
-                                    <div className="form-check">
-                                        <input className="form-check-input" type="checkbox" id="terms-conditions" name="terms" />
-                                        <label className="form-check-label" htmlFor="terms-conditions">
-                                            I agree to
-                                            <a href="javascript:void(0);">privacy policy & terms</a>
-                                        </label>
+                                    <div className="col-md-6 mb-3">
+                                        <label htmlFor="email" className="form-label">Email Address*</label>
+                                        <input
+                                            type="email"
+                                            className={`form-control ${show && errorMessage.email ? 'border-danger' : ''}`}
+                                            id="email"
+                                            name="email"
+                                            onChange={getInputData}
+                                            placeholder="Enter your Email Address"
+                                            autoFocus
+                                        />
+                                        {show && errorMessage.email ? <p className='text-danger'>{errorMessage.email}</p> : null}
                                     </div>
+
+                                    <div className="col-md-6 mb-3 form-password-toggle">
+                                        <label className="form-label" htmlFor="password">Password</label>
+                                        <div className="input-group input-group-merge">
+                                            <input
+                                                type={showPassword ? 'text' : "password"}
+                                                id="password"
+                                                className={`form-control ${show && errorMessage.password ? 'border-danger' : ''}`}
+                                                name="password"
+                                                onChange={getInputData}
+                                                placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                                                aria-describedby="password"
+                                            />
+                                            <span className="input-group-text cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
+                                                <i className={`${showPassword ? 'ti ti-eye' : 'ti ti-eye-off'}`}></i>
+                                            </span>
+                                        </div>
+                                        {show && errorMessage.password ? errorMessage.password.split("|").map((item, index) => {
+                                            return <p className='text-danger' key={index}>{item}</p>
+                                        }) : null}
+                                    </div>
+
+                                    <div className="col-md-6 mb-3 form-password-toggle">
+                                        <label className="form-label" htmlFor="password">Confirm Password</label>
+                                        <div className="input-group input-group-merge">
+                                            <input
+                                                type="password"
+                                                id="cpassword"
+                                                className={`form-control ${show && errorMessage.password ? 'border-danger' : ''}`}
+                                                name="cpassword"
+                                                onChange={getInputData}
+                                                placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                                                aria-describedby="password"
+                                            />
+                                        </div>
+
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <div className="form-check">
+                                            <input className="form-check-input" type="checkbox" id="terms-conditions" name="terms" />
+                                            <label className="form-check-label" htmlFor="terms-conditions">
+                                                I agree to
+                                                <a href="javascript:void(0);">privacy policy & terms</a>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <button className="btn btn-primary d-grid w-100">Sign up</button>
                                 </div>
-                                <button className="btn btn-primary d-grid w-100">Sign up</button>
                             </form>
 
                             <p className="text-center">
                                 <span>Already have an account?</span>
-                                <a href="auth-login-cover.html">
+                                <Link to="/login">
                                     <span>Sign in instead</span>
-                                </a>
+                                </Link>
                             </p>
 
                             <div className="divider my-4">
