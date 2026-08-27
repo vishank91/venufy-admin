@@ -45,7 +45,6 @@ export default function SignupPage() {
             })
             return
         }
-        console.log(data)
         let response = await fetch(`${import.meta.env.VITE_APP_BACKEND_SERVER}/auth/signup`, {
             method: "POST",
             headers: {
@@ -66,7 +65,7 @@ export default function SignupPage() {
         if (response.status === 201)
             navigate("/login")
         else {
-            setErrorMessage({ ...errorMessage, ...response.message })
+            setErrorMessage({ ...errorMessage, ...response.reason })
             setShow(true)
         }
     }
