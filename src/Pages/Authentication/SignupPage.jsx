@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import TextValidators from "../../Validators/TextValidators"
 export default function SignupPage() {
+    let [loading, setLoading] = useState(false)
     let [showPassword, setShowPassword] = useState(false)
     let [data, setData] = useState({
         name: '',
@@ -32,6 +33,7 @@ export default function SignupPage() {
         e.preventDefault()
 
         let item = Object.values(errorMessage).find(x => x !== "")
+
         if (item) {
             setShow(true)
             return
@@ -45,28 +47,41 @@ export default function SignupPage() {
             })
             return
         }
-        let response = await fetch(`${import.meta.env.VITE_APP_BACKEND_SERVER}/auth/signup`, {
-            method: "POST",
-            headers: {
-                "content-type": "application/json"
-            },
-            body: JSON.stringify({
-                name: data.name,
-                username: data.username,
-                email: data.email,
-                phone: data.phone,
-                password: data.password,
-                confirmPassword: data.cpassword,
-                role: "customer"
+
+        setLoading(true)
+
+        try {
+            let response = await fetch(`${import.meta.env.VITE_APP_BACKEND_SERVER}/auth/signup`, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: data.name,
+                    username: data.username,
+                    email: data.email,
+                    phone: data.phone,
+                    password: data.password,
+                    confirmPassword: data.cpassword,
+                    role: "customer"
+                })
             })
-        })
-        response = await response.json()
-        console.log(response)
-        if (response.status === 201)
-            navigate("/login")
-        else {
-            setErrorMessage({ ...errorMessage, ...response.reason })
-            setShow(true)
+
+            response = await response.json()
+
+            if (response.result === "Done") {
+                localStorage.setItem("phone", data.phone)
+                navigate("/verify-phone")
+            }
+            else {
+                setErrorMessage({ ...errorMessage, ...response.reason })
+                setShow(true)
+            }
+
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoading(false)
         }
     }
     return (
@@ -203,14 +218,31 @@ export default function SignupPage() {
 
                                     <div className="mb-3">
                                         <div className="form-check">
-                                            <input className="form-check-input" type="checkbox" id="terms-conditions" name="terms" />
+                                            <input className="form-check-input" required type="checkbox" id="terms-conditions" name="terms" />
                                             <label className="form-check-label" htmlFor="terms-conditions">
                                                 I agree to
                                                 <a href="javascript:void(0);">privacy policy & terms</a>
                                             </label>
                                         </div>
                                     </div>
-                                    <button className="btn btn-primary d-grid w-100">Sign up</button>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary d-grid w-100"
+                                        disabled={loading}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                ></span>
+                                                Please wait...
+                                            </>
+                                        ) : (
+                                            "Sign up"
+                                        )}
+                                    </button>
                                 </div>
                             </form>
 
