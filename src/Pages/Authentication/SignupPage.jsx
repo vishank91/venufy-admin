@@ -71,6 +71,7 @@ export default function SignupPage() {
 
             if (response.result === "Done") {
                 localStorage.setItem("phone", data.phone)
+                localStorage.setItem("email", data.email)
                 navigate("/verify-phone")
             }
             else {
@@ -116,7 +117,7 @@ export default function SignupPage() {
                             {/*  Logo  */}
                             <div className="app-brand mb-4">
                                 <Link to="/" className="app-brand-link gap-2 text-dark fs-1">
-                                    Venuefy
+                                    {import.meta.env.VITE_APP_SITE_NAME}
                                 </Link>
                             </div>
                             {/*  /Logo  */}

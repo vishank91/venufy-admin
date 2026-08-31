@@ -40,7 +40,7 @@ export default function HomePage() {
                                         />
                                     </svg>
                                 </span>
-                                <span className="app-brand-text demo menu-text fw-bold">Vuexy</span>
+                                <span className="app-brand-text demo menu-text fw-bold">{import.meta.env.VITE_APP_SITE_NAME}</span>
                             </a>
 
                             <a href="javascript:void(0);" className="layout-menu-toggle menu-link text-large ms-auto">
@@ -953,7 +953,7 @@ export default function HomePage() {
                             </li>
                             <li className="menu-item">
                                 <a
-                                    href="https://pixinvent.com/demo/vuexy-html-bootstrap-admin-template/documentation/"
+                                    href="https://pixinvent.com/demo/{import.meta.env.VITE_APP_SITE_NAME}-html-bootstrap-admin-template/documentation/"
                                     target="_blank"
                                     className="menu-link"
                                 >
@@ -1522,7 +1522,7 @@ export default function HomePage() {
                                                                 />
                                                             </svg>
 
-                                                            <span className="app-brand-text fw-bold fs-4"> Vuexy </span>
+                                                            <span className="app-brand-text fw-bold fs-4"> {import.meta.env.VITE_APP_SITE_NAME} </span>
                                                         </div>
                                                         <p className="mb-2">Office 149, 450 South Brand Brooklyn</p>
                                                         <p className="mb-2">San Diego County, CA 91905, USA</p>
@@ -1938,7 +1938,7 @@ export default function HomePage() {
                                             >
 
                                             <a
-                                                href="https://pixinvent.com/demo/vuexy-html-bootstrap-admin-template/documentation/"
+                                                href="https://pixinvent.com/demo/{import.meta.env.VITE_APP_SITE_NAME}-html-bootstrap-admin-template/documentation/"
                                                 target="_blank"
                                                 className="footer-link me-4"
                                             >Documentation</a

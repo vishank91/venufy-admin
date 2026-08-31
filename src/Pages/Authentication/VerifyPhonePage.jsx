@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-export default function PhoneVerificationPage() {
+export default function VerifyPhonePage() {
 
   let [otp, setOtp] = useState(["", "", "", "", "", ""])
   let inputRefs = useRef([])
@@ -112,7 +112,7 @@ export default function PhoneVerificationPage() {
 
             <div className="app-brand mb-4">
               <Link to="/" className="app-brand-link gap-2 text-dark fs-1">
-                Venuefy
+                {import.meta.env.VITE_APP_SITE_NAME}
               </Link>
             </div>
 

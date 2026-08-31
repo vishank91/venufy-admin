@@ -128,7 +128,7 @@ export default function LoginPage() {
                 to="/"
                 className="app-brand-link gap-2 text-dark fs-1"
               >
-                Venuefy
+                {import.meta.env.VITE_APP_SITE_NAME}
               </Link>
 
             </div>
@@ -136,7 +136,7 @@ export default function LoginPage() {
 
 
             <h3 className="mb-1 fw-bold">
-              Welcome to Venuefy! 👋
+              Welcome to {import.meta.env.VITE_APP_SITE_NAME}! 👋
             </h3>
 
             <p className="mb-4">
