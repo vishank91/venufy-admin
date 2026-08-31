@@ -56,13 +56,13 @@ export default function LoginPage() {
           "content-type": "application/json"
         },
         body: JSON.stringify({
-          username: data.username,
+          login: data.username,
           password: data.password
         })
       })
 
       response = await response.json()
-
+      console.log(response)
       if (response.result === "Done") {
 
         // Store login response
@@ -157,7 +157,7 @@ export default function LoginPage() {
                   htmlFor="username"
                   className="form-label"
                 >
-                  Email or Username
+                  Email or Username or Phone Number
                 </label>
 
                 <input
@@ -167,7 +167,7 @@ export default function LoginPage() {
                   name="username"
                   value={data.username}
                   onChange={getInputData}
-                  placeholder="Enter your email or username"
+                  placeholder="Enter your email or username or phone number"
                   autoFocus
                 />
 
