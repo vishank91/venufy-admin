@@ -1,191 +1,173 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 export default function VerifyPhonePage() {
+    let [otp, setOtp] = useState(["", "", "", "", "", ""])
+    let [error, setError] = useState("")
+    let [loading, setLoading] = useState(false)
+    let [seconds, setSeconds] = useState(120)
+    let inputs = useRef([])
+    let navigate = useNavigate()
+    let phone = localStorage.getItem("phone") || ""
 
-  let [otp, setOtp] = useState(["", "", "", "", "", ""])
-  let inputRefs = useRef([])
-  let [errorMessage, setErrorMessage] = useState("")
-  let [show, setShow] = useState(false)
+    useEffect(() => {
+        let timer = setInterval(() => {
+            setSeconds((value) => value > 0 ? value - 1 : 0)
+        }, 1000)
 
-  let navigate = useNavigate()
+        return () => clearInterval(timer)
+    }, [])
 
-  function handleChange(e, index) {
-    let value = e.target.value
+    function changeOtp(value, index) {
+        if (!/^\d?$/.test(value)) return
 
-    setShow(false)
+        let newOtp = [...otp]
+        newOtp[index] = value
+        setOtp(newOtp)
 
-    // Allow numbers only
-    if (!/^\d$/.test(value)) {
-      return
+        if (value && index < 5) inputs.current[index + 1].focus()
     }
 
-    let newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
-
-    // Move focus to the next input
-    if (index < 5) {
-      inputRefs.current[index + 1].focus()
-    }
-  }
-
-  function handleKeyDown(e, index) {
-
-    // Move to the previous input on backspace
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus()
-    }
-  }
-
-  function handlePaste(e) {
-    e.preventDefault()
-
-    // Get only numeric values from clipboard
-    let value = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6)
-
-    if (!value) {
-      return
+    function keyDown(e, index) {
+        if (e.key === "Backspace" && !otp[index] && index > 0) {
+            inputs.current[index - 1].focus()
+        }
     }
 
-    let newOtp = ["", "", "", "", "", ""]
+    function pasteOtp(e) {
+        e.preventDefault()
 
-    value.split("").forEach((digit, index) => {
-      newOtp[index] = digit
-    })
+        let value = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6)
+        if (!value) return
 
-    setOtp(newOtp)
+        let newOtp = ["", "", "", "", "", ""]
+        value.split("").forEach((digit, index) => newOtp[index] = digit)
+        setOtp(newOtp)
 
-    // Focus the last filled input
-    inputRefs.current[Math.min(value.length - 1, 5)].focus()
-  }
-
-  async function postSubmit(e) {
-    e.preventDefault()
-
-    let response = await fetch(`${import.meta.env.VITE_APP_BACKEND_SERVER}/auth/verify-phone`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        phone: localStorage.getItem("phone"),
-        otp: otp.join("")
-      })
-    })
-    response = await response.json()
-    console.log(response)
-    if (response.result === "Done") {
-      localStorage.removeItem("phone")
-      navigate("/login")
+        inputs.current[Math.min(value.length - 1, 5)].focus()
     }
-    else {
-      setErrorMessage(Object.values(response.reason ?? {}))
-      setShow(true)
+
+    async function postSubmit(e) {
+        e.preventDefault()
+        setError("")
+
+        let code = otp.join("")
+
+        if (code.length !== 6) {
+            setError("Please enter the complete 6 digit OTP.")
+            return
+        }
+
+        setLoading(true)
+
+        try {
+            let response = await fetch(`${import.meta.env.VITE_APP_BACKEND_SERVER}/auth/verify-phone`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phone, otp: code })
+            })
+
+            let data = await response.json()
+
+            if (!response.ok) throw new Error(data.message || data.reason || "Invalid OTP.")
+
+            navigate("/login")
+        } catch (error) {
+            setError(error.message)
+        } finally {
+            setLoading(false)
+        }
     }
-  }
 
-  return (
-    <div className="authentication-wrapper authentication-cover authentication-bg">
-      <div className="authentication-inner row">
+    async function resendOtp() {
+        if (seconds > 0 || loading) return
 
-        <div className="d-none d-lg-flex col-lg-7 p-0">
-          <div className="auth-cover-bg auth-cover-bg-color d-flex justify-content-center align-items-center">
+        setError("")
 
-            <img
-              src="../../assets/img/illustrations/auth-two-step-illustration-light.png"
-              alt="auth-two-steps-cover"
-              className="img-fluid my-5 auth-illustration"
-            />
+        try {
+            let response = await fetch(`${import.meta.env.VITE_APP_BACKEND_SERVER}/auth/resend-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phone })
+            })
 
-            <img
-              src="../../assets/img/illustrations/bg-shape-image-light.png"
-              alt="auth-two-steps-cover"
-              className="platform-bg"
-            />
+            let data = await response.json()
 
-          </div>
-        </div>
+            if (!response.ok) throw new Error(data.message || data.reason || "Unable to resend OTP.")
 
-        <div className="d-flex col-12 col-lg-5 col-xl-4 align-items-center p-4 p-sm-5">
-          <div className="w-px-400 mx-auto">
+            setSeconds(120)
+            setOtp(["", "", "", "", "", ""])
+            inputs.current[0].focus()
+        } catch (error) {
+            setError(error.message)
+        }
+    }
 
-            <div className="app-brand mb-4">
-              <Link to="/" className="app-brand-link gap-2 text-dark fs-1">
-                {import.meta.env.VITE_APP_SITE_NAME}
-              </Link>
-            </div>
+    let time = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`
 
-            <h3 className="mb-1 fw-bold">
-              Two Step Verification 💬
-            </h3>
-
-            <p className="text-start mb-4">
-              We sent a verification code to your mobile.
-              Enter the code from the mobile in the field below.
-
-              <span className="fw-bold d-block mt-2">
-                ******{localStorage.getItem("phone")?.slice(-4)}
-              </span>
-            </p>
-
-            <p className="mb-0 fw-semibold">
-              {show ? errorMessage : 'Type your 6 digit security code'}
-            </p>
-
-            <form onSubmit={postSubmit}>
-
-              <div className="mb-3">
-
-                <div className="auth-input-wrapper d-flex align-items-center justify-content-sm-between">
-
-                  {otp.map((digit, index) => (
-                    <input
-                      key={index}
-                      ref={(element) => inputRefs.current[index] = element}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={digit}
-                      autoFocus={index === 0}
-                      className="form-control auth-input h-px-50 text-center mx-1 my-2"
-                      onChange={(e) => handleChange(e, index)}
-                      onKeyDown={(e) => handleKeyDown(e, index)}
-                      onPaste={handlePaste}
-                    />
-                  ))}
-
+    return (
+        <div className="authentication-wrapper authentication-cover authentication-bg">
+            <div className="authentication-inner row">
+                <div className="d-none d-lg-flex col-lg-7 p-0">
+                    <div className="auth-cover-bg auth-cover-bg-color d-flex justify-content-center align-items-center">
+                        <img src="../../assets/img/illustrations/auth-two-step-illustration-light.png" alt="verify-phone" className="img-fluid my-5 auth-illustration" />
+                        <img src="../../assets/img/illustrations/bg-shape-image-light.png" alt="background" className="platform-bg" />
+                    </div>
                 </div>
 
-                <input
-                  type="hidden"
-                  name="otp"
-                  value={otp.join("")}
-                  readOnly
-                />
+                <div className="d-flex col-12 col-lg-5 align-items-center p-4 p-sm-5">
+                    <div className="w-px-400 mx-auto">
+                        <div className="app-brand mb-4">
+                            <Link to="/" className="app-brand-link gap-2 text-dark fs-1">Venuefy</Link>
+                        </div>
 
-              </div>
+                        <h3 className="mb-1 fw-bold">Two Step Verification 💬</h3>
+                        <p className="text-start mb-4">
+                            We sent a verification code to your mobile.
+                            <span className="fw-bold d-block mt-2">******{phone.slice(-4)}</span>
+                        </p>
 
-              <button
-                type="submit"
-                className="btn btn-primary d-grid w-100 mb-3"
-              >
-                Verify my account
-              </button>
+                        {error && <div className="alert alert-danger">{error}</div>}
 
-              <div className="text-center">
-                Didn't get the code?
-                <a href="#resend" onClick={(e) => e.preventDefault()}>
-                  {" "}Resend
-                </a>
-              </div>
+                        <form onSubmit={postSubmit}>
+                            <p className="mb-0 fw-semibold">Type your 6 digit security code</p>
 
-            </form>
+                            <div className="mb-3">
+                                <div className="auth-input-wrapper d-flex align-items-center justify-content-sm-between numeral-mask-wrapper">
+                                    {otp.map((value, index) => (
+                                        <input
+                                            key={index}
+                                            ref={(element) => inputs.current[index] = element}
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength="1"
+                                            value={value}
+                                            autoFocus={index === 0}
+                                            onChange={(e) => changeOtp(e.target.value, index)}
+                                            onKeyDown={(e) => keyDown(e, index)}
+                                            onPaste={pasteOtp}
+                                            className="form-control auth-input h-px-50 text-center mx-1 my-2"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
 
-          </div>
+                            <button type="submit" disabled={loading} className="btn btn-primary d-grid w-100 mb-3">
+                                {loading && <span className="spinner-border spinner-border-sm me-2"></span>}
+                                {loading ? "Please wait..." : "Verify my account"}
+                            </button>
+
+                            <div className="text-center">
+                                Didn't get the code?
+                                {seconds > 0
+                                    ? <span className="fw-semibold ms-1">Resend in {time}</span>
+                                    : <button type="button" className="btn btn-link p-0 ms-1" onClick={resendOtp}>Resend</button>
+                                }
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-
-      </div>
-    </div>
-  )
+    )
 }
