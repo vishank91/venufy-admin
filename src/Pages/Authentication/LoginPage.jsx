@@ -33,8 +33,8 @@ export default function LoginPage() {
             })
 
             response = await response.json()
-            if (response.result!=="Done") {
-                throw new Error(data.message || data.reason || "Login failed.")
+            if (response.result === "Fail") {
+                throw new Error(response.message || response.reason || "Login failed.")
             }
 
             if (response?.data.token) localStorage.setItem("token", response?.data.token)

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 export default function VerifyEmailPage() {
@@ -6,6 +6,7 @@ export default function VerifyEmailPage() {
     let [status, setStatus] = useState("loading")
     let [message, setMessage] = useState("")
     let [loading, setLoading] = useState(false)
+    let verifyStarted = useRef(false)
     let email = localStorage.getItem("email") || ""
 
     useEffect(() => {
@@ -13,6 +14,9 @@ export default function VerifyEmailPage() {
     }, [])
 
     async function verifyEmail() {
+        if (verifyStarted.current) return
+        verifyStarted.current = true
+
         let token = searchParams.get("token")
 
         if (!token) {

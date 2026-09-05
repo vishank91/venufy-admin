@@ -1,12 +1,21 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import SideMenu from '../Components/SideMenu'
 import Navbar from '../Components/Navbar'
 import Footer from '../Components/Footer'
 
 export default function HomePage() {
     let user = JSON.parse(localStorage.getItem("user") || "{}")
+    let navigate = useNavigate()
 
+    useEffect(()=>{
+        (()=>{
+            setTimeout(()=>{
+                if(!user.name)
+                    navigate("/login")
+            },500)
+        })()
+    },[])
     return (
         <div className="layout-wrapper layout-content-navbar">
             <div className="layout-container">
