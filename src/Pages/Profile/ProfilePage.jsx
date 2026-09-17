@@ -25,15 +25,13 @@ export default function ProfilePage() {
 
   if (error) {
     return (
-      <div className="container-xxl container-p-y">
-        <div className="alert alert-danger">{error}</div>
-
-        <Link to="/profile/create" className="btn btn-primary">
-          Create Profile
-        </Link>
-      </div>
+        <div className="container-xxl container-p-y">
+            <div className="alert alert-danger">
+                {error}
+            </div>
+        </div>
     );
-  }
+}
 
   if (!profile) {
     return (
